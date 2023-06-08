@@ -38,6 +38,27 @@
   - For all the variants and their proxys individually (no haplotypes)
   - DE model for all the haplotypes of a variant
   - DTU model for all the haplotypes of a variant
+       1. Filter genes and transcripts:
+         - if(n_transcripts_per_gene > 1) # genes to be considered for DTU have to have more than one transcript
+         -  Summary_table<-as.data.frame(Transposed_Isoform_Expression_sel.m_ADAPTED_HET.dt[, .(median=round(as.numeric(summary(TPM)[3]),3)),
+                                                                              by=key(Transposed_Isoform_Expression_sel.m_ADAPTED_HET.dt)],stringsAsFactors=F)   # Calculate the median TPM expression per genotype (Hom_ref vs HET)
+         -  Summary_table_TOTAL<-as.data.frame(Summary_table.dt[, .(TOTAL_GENE_EXP_median=sum(median)),
+                                                              by=key(Summary_table.dt)],stringsAsFactors=F) # Calculate total gene expression as the summatory of the medians per genotype
+         
+         -  Summary_table$Transcript_Ratio<-(Summary_table$median/Summary_table$TOTAL_GENE_EXP_median) # calculate Transcript Ratio as the median transcript ratio per genotype divided by the total gene expression by gentoype
+         - Summary_table.dt<-data.table(Summary_table,
+                                       key=c("transcript_id")) \ change the key to transcript
+         - Summary_table_FILTERED<-as.data.frame(Summary_table.dt[,.SD[which.max(Transcript_Ratio)],
+                                                                 by=key(Summary_table.dt)],stringsAsFactors=F) # get the maximum transcript ratio by transcript (it will happen in any of the two genotypes Hom_ref or HET)
+         -  Summary_table_FILTERED<-Summary_table_FILTERED[which(Summary_table_FILTERED$Transcript_Ratio >= 0.1),] # filter transcripts that make 10% or more of the Transcript ratio in at least one of the two genotypes
+         -  saveRDS(file=paste("DTU_PASS_Transcripts_",SELECTED_VARS_UPDATED_sel,'.rds', sep=''), TRANSCRIPTS_table_FILTERED_FINAL) # save the filtered genes and transcripts
+
+      2. DTU model
+      
+          
+          
+                                                              
+                                                              
   - Multiple testing correction for DE and DTU
   - Put together results DE + ALL by ALL correction
   - Put together results DTU
