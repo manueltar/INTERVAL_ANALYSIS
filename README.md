@@ -72,15 +72,48 @@
               -   Reference_value_MAX<-Reference_value[which(Reference_value$mean_TPM == max_value),]
               -   Reference_transcript<-Reference_value_MAX$transcript_id[1] # here we get the transcript_id of the transcript with the highest mean expression across genotypes for a given gene. This is done without having corrected the expression by the covariates
 
-            - 
-          
-          
+            - Calculate transcript ratios
+              - Transposed_Isoform_Expression_sel.m_REDUCED.dt<-data.table(Transposed_Isoform_Expression_sel.m_REDUCED, key=c("sample_id"))
+              - Summary_table_GENE_EXP<-as.data.frame(Transposed_Isoform_Expression_sel.m_REDUCED.dt[, .(sum_GENE_EXP=sum(TPM)), by=key(Transposed_Isoform_Expression_sel.m_REDUCED.dt)],stringsAsFactors=F)
+              - Transposed_Isoform_Expression_sel.m_REDUCED<-merge(Transposed_Isoform_Expression_sel.m_REDUCED, Summary_table_GENE_EXP,by="sample_id")
+              - Transposed_Isoform_Expression_sel.m_REDUCED.dt<-data.table(Transposed_Isoform_Expression_sel.m_REDUCED,key=c("sample_id","transcript_id"))
+              - Ratio_df<-as.data.frame(Transposed_Isoform_Expression_sel.m_REDUCED.dt[, .(TPM=TPM,sum_GENE_EXP=sum_GENE_EXP, Ratio=TPM/sum_GENE_EXP),by=key(Transposed_Isoform_Expression_sel.m_REDUCED.dt)],stringsAsFactors=F)
 
-
-          
-                                                              
-                                                              
+            - Scale the transcript ratios to the value of the reference transcript for the model
+               - Ratio_df_reference<-droplevels(Ratio_df[which(Ratio_df$transcript_id == Reference_transcript),c(which(colnames(Ratio_df) == "sample_id"), which(colnames(Ratio_df) == "transcript_id"), which(colnames(Ratio_df) == "Ratio"))])
+               - colnames(Ratio_df_reference)[which(colnames(Ratio_df_reference) == "Ratio")]<-"Reference_ratio_value"
+               - Ratio_df<-merge(Ratio_df,Ratio_df_reference,by="sample_id",all.x=T)
+               - Ratio_df$scaled_ratio<-Ratio_df$Ratio/Ratio_df$Reference_ratio_value # Here we scaled all the ratio values to the ratio value of the reference transcript
+             - Calculate the log
+               - Ratio_df$logscaled_ratio<-log(Ratio_df$scaled_ratio)
+             - Full Linear regression model per transcript
+                - for(k in 1:length(ENST_array))
+                - Ratio_df_ENST_sel<-merge(Ratio_df_ENST_sel,INTERVAL_covariates_and_PEER_factors_sel,by="sample_id")
+                - ACCEPTED_genotypes<-c("HOM_REF","HET")
+                - Ratio_df_ENST_sel_HET<-Ratio_df_ENST_sel[which(Ratio_df_ENST_sel$Genotype%in%ACCEPTED_genotypes),]
+                - Ratio_df_ENST_sel_HET<-droplevels(Ratio_df_ENST_sel_HET)
+                - unselected_columns<-c("sample_id","transcript_id","TPM","sum_GENE_EXP","Ratio","Reference_ratio_value","scaled_ratio")
+                - model<-lm(logscaled_ratio ~ ., data=Ratio_df_ENST_sel_HET_LM) # This is the full model, logscaled_ratio ratio against all the covariates (constitutive and specific) + Genotype
+                - results<-A$coefficients
+                - pvalue_Genotypes_1<-as.numeric(results[which(row.names(results) == "Genotype.L"),4])
+                - coefficient_Genotypes_1<-as.numeric(results[which(row.names(results) == "Genotype.L"),1])
+                - A.df<-as.data.frame(cbind(ENST_array_sel,pvalue_Genotypes_1, coefficient_Genotypes_1, RUN_OUT_OF_NAMES_DEF))
+                - colnames(A.df)<-c("transcript_id","pvalue_Genotypes_specific_CELL_COUNTS","coefficient_Genotypes_specific_CELL_COUNTS","n_breakdown_string")
+                - A.df$pvalue_Genotypes_specific_CELL_COUNTS<-as.numeric(A.df$pvalue_Genotypes_specific_CELL_COUNTS)
+                - A.df$coefficient_Genotypes_specific_CELL_COUNTS<-as.numeric(A.df$coefficient_Genotypes_specific_CELL_COUNTS)
+           - Reduced linear model to plot residuals + intercept
+                - unselected_columns<-c("sample_id","transcript_id","sum_GENE_EXP","TPM","Reference_ratio_value","scaled_ratio","Genotype","logscaled_ratio") # exclude the genotype from the analysis
+                - model<-lm(Ratio ~ ., data=Ratio_df_ENST_sel_HET_LM) # reduced model with the ratio not the logscaled ratio
+                -  residual_results=residuals(model)
+                -  residual_names<-names(residual_results)
+                -  colnames(residual_results)<-"residuals_full_model" # Obtain residuals
+                -  intercept<-summary_model.m$value[which(summary_model.m$Parameters == "Estimate" & summary_model.m$Terms == "(Intercept)")] # Obtain intercept
+                -   residual_df<-as.data.frame(cbind(residual_names,residual_results),stringsAsFactors=F)
+                -   colnames(residual_df)<-c("sample_id","residuals")
+                -   residual_df$residuals<-as.numeric(residual_df$residuals)
+                -   residual_df$residuals<-as.numeric(intercept) + residual_df$residuals # Add intercept to residuals                                                            
   - Multiple testing correction for DE and DTU
+            - 
   - Put together results DE + ALL by ALL correction
   - Put together results DTU
   - DE graphical representation
