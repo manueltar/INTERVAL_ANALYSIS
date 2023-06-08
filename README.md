@@ -133,9 +133,7 @@
                 -  MT_set$ajusted.minuslogpvalue_Genotypes_specific_CELL_COUNTS<-round(-1*log10(MT_set$ajusted.pvalue_Genotypes_specific_CELL_COUNTS),2) # Correct the pvalues
          5. Correction_genome_wide
                 -  MT_set$ajusted.pvalue_Genotypes_specific_CELL_COUNTS<-p.adjust(MT_set$pvalue_Genotypes_specific_CELL_COUNTS, method = "BH")
-                -  MT_set$ajusted.minuslogpvalue_Genotypes_specific_CELL_COUNTS<-round(-1*log10(MT_set$ajusted.pvalue_Genotypes_specific_CELL_COUNTS),2) # Select all the genes with DTU model for a variant and correct (all genesx all transcripts)
-             
-               
+                -  MT_set$ajusted.minuslogpvalue_Genotypes_specific_CELL_COUNTS<-round(-1*log10(MT_set$ajusted.pvalue_Genotypes_specific_CELL_COUNTS),2) # Select all the genes with DTU model for a variant and correct (all genesx all transcripts)       
          
              
   - Put together results DE + ALL by ALL correction
