@@ -113,15 +113,15 @@
                 -   residual_df$residuals<-as.numeric(residual_df$residuals)
                 -   residual_df$residuals<-as.numeric(intercept) + residual_df$residuals # Add intercept to residuals                                                            
   - Multiple testing correction for DE
-  - Multiple testing correction for DTU:
-             - CIS consequences
+  - Multiple testing correction for DTU
+             1. CIS consequences
                 - Per variant
                 - CIS_LABELS <-c("LOF","MISS","SYN","UTR5","UTR3","INTRON","SPLICE","UPSTREAM")
                 - VEP_CSQ_sel_CIS<-VEP_CSQ_sel[which(VEP_CSQ_sel$VEP_DEF_LABELS%in%CIS_LABELS),] # Only variants that have CIS consequences in the genes
                 - Results_Nominal_sel<-Results_Nominal[which(Results_Nominal$ensembl_gene_id%in%ENSG_array),] # Select nominal pvalues for the genes in which the variant has CIS consequences
                 - MT_set$ajusted.pvalue_Genotypes_specific_CELL_COUNTS<-p.adjust(MT_set$pvalue_Genotypes_specific_CELL_COUNTS, method = "BH")
                 - MT_set$ajusted.minuslogpvalue_Genotypes_specific_CELL_COUNTS<-round(-1*log10(MT_set$ajusted.pvalue_Genotypes_specific_CELL_COUNTS),2) # Adjust the pvalues to the tests (different transcripts of the CIS genes)
-             - in_block_Plus_PCHi_C
+             2. in_block_Plus_PCHi_C
                 -  AS_Gene_source<-merge(ALL_FINAL_sel,GENES_PER_BLOCKS,by="Allelic_Series_ID") # select all the genes in the GWAS block
                 -  PCHiC_info_sel<-PCHiC_info[which(PCHiC_info$VAR%in%SELECTED_VARS_UPDATED),] # Select all the genes linked to the variant by PCHiC
                 -  ENSG_sel<-unique(AS_Gene_source_sel$ensembl_gene_id)
@@ -131,7 +131,7 @@
                 -  Results_Nominal_sel<-Results_Nominal[which(Results_Nominal$ensembl_gene_id%in%ENSG_array),] # select nominal pvalues
                 -  MT_set$ajusted.pvalue_Genotypes_specific_CELL_COUNTS<-p.adjust(MT_set$pvalue_Genotypes_specific_CELL_COUNTS, method = "BH")
                 -  MT_set$ajusted.minuslogpvalue_Genotypes_specific_CELL_COUNTS<-round(-1*log10(MT_set$ajusted.pvalue_Genotypes_specific_CELL_COUNTS),2) # Correct the pvalues
-              -  correction_genome_wide
+              3. Correction_genome_wide
                 -  MT_set$ajusted.pvalue_Genotypes_specific_CELL_COUNTS<-p.adjust(MT_set$pvalue_Genotypes_specific_CELL_COUNTS, method = "BH")
                 -  MT_set$ajusted.minuslogpvalue_Genotypes_specific_CELL_COUNTS<-round(-1*log10(MT_set$ajusted.pvalue_Genotypes_specific_CELL_COUNTS),2) # Select all the genes with DTU model for a variant and correct (all genesx all transcripts)
              
