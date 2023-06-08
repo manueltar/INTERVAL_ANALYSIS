@@ -53,9 +53,30 @@
          -  Summary_table_FILTERED<-Summary_table_FILTERED[which(Summary_table_FILTERED$Transcript_Ratio >= 0.1),] # filter transcripts that make 10% or more of the Transcript ratio in at least one of the two genotypes
          -  saveRDS(file=paste("DTU_PASS_Transcripts_",SELECTED_VARS_UPDATED_sel,'.rds', sep=''), TRANSCRIPTS_table_FILTERED_FINAL) # save the filtered genes and transcripts
 
-      2. DTU model
-      
+      2. DTU model      
+          - if(n_transcripts_per_gene > 1) # only for genes that have two or more transcripts after the transcript filtering
+          - Impute the 0 to 0.65 of the lowest expression:
+              - Transposed_Isoform_Expression_sel.m_REDUCED_NO_ZERO<-Transposed_Isoform_Expression_sel.m_REDUCED[which(Transposed_Isoform_Expression_sel.m_REDUCED$TPM >0),]
+              - Transposed_Isoform_Expression_sel.m_REDUCED_NO_ZERO.dt<-data.table(Transposed_Isoform_Expression_sel.m_REDUCED_NO_ZERO,
+                                                                     key=c("transcript_id"))
+              - Zero_imputation_values<-as.data.frame(Transposed_Isoform_Expression_sel.m_REDUCED_NO_ZERO.dt[,.(min_TPM=min(TPM)),by=key(Transposed_Isoform_Expression_sel.m_REDUCED_NO_ZERO.dt)], stringsAsFactors=F) # min expression value for transcript irrespective of the genotype
+              - Transposed_Isoform_Expression_sel.m_REDUCED_ZERO$TPM<-0.65*Transposed_Isoform_Expression_sel.m_REDUCED_ZERO$min_TPM # All the values with 0 expression are imputed to 0.65 of the minimum
+              - Transposed_Isoform_Expression_sel.m_REDUCED<-rbind(Transposed_Isoform_Expression_sel.m_REDUCED_ZERO,
+                                                     Transposed_Isoform_Expression_sel.m_REDUCED_NO_ZERO) # Rejoin the dataframes
+                                                     
+                                                     
+           -  Obtain the reference transcript for the model, the transcript with the highest mean expression across the genoytpes
+              -  Transposed_Isoform_Expression_sel.m_REDUCED.dt<-data.table(Transposed_Isoform_Expression_sel.m_REDUCED,
+                                                             key=c("transcript_id"))
+              -  Reference_value<-as.data.frame(Transposed_Isoform_Expression_sel.m_REDUCED.dt[,.(mean_TPM=mean(TPM)),by=key(Transposed_Isoform_Expression_sel.m_REDUCED.dt)], stringsAsFactors=F)
+              -   Reference_value_MAX<-Reference_value[which(Reference_value$mean_TPM == max_value),]
+              -   Reference_transcript<-Reference_value_MAX$transcript_id[1] # here we get the transcript_id of the transcript with the highest mean expression across genotypes for a given gene. This is done without having corrected the expression by the covariates
+
+            - 
           
+          
+
+
           
                                                               
                                                               
