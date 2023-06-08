@@ -37,6 +37,14 @@
 
   - For all the variants and their proxys individually (no haplotypes)
   - DE model for all the haplotypes of a variant
+      1. Merge gene expression with covariates matrix: INTERVAL_GENE_EXP_sel.m<-merge(INTERVAL_GENE_EXP_sel.m,INTERVAL_covariates_and_PEER_factors_sel,by="sample_id")
+      2. Restrict to Hom ref vs HET comparison: ACCEPTED_genotypes<-c("HOM_REF","HET")  INTERVAL_GENE_EXP_sel.m_HET<-INTERVAL_GENE_EXP_sel.m[which(INTERVAL_GENE_EXP_sel.m$Genotype%in%ACCEPTED_genotypes),]
+      3. Full LM model: unselected_columns<-c("sample_id","ensembl_gene_id","log2FPKM") model<-lm(FPKM ~ ., data=INTERVAL_GENE_EXP_sel.m_HET_LM)
+      4. pvalue_Genotypes_1<-as.numeric(results[which(row.names(results) == "Genotype.L"),4])
+      5. coefficient_Genotypes_1<-as.numeric(results[which(row.names(results) == "Genotype.L"),1])
+      6. Reduced linear model to plot residuals: unselected_columns<-c("sample_id","ensembl_gene_id","log2FPKM","Genotype")
+      7. Obtain residuals and intercept and add them: residual_results=residuals(model), intercept<-summary_model.m$value[which(summary_model.m$Parameters == "Estimate" & summary_model.m$Terms == "(Intercept)")] residual_df$residuals<-as.numeric(intercept) + residual_df$residuals
+     
   - DTU model for all the haplotypes of a variant
        1. Filter genes and transcripts:
          - if(n_transcripts_per_gene > 1) # genes to be considered for DTU have to have more than one transcript
@@ -112,7 +120,10 @@
                 -   colnames(residual_df)<-c("sample_id","residuals")
                 -   residual_df$residuals<-as.numeric(residual_df$residuals)
                 -   residual_df$residuals<-as.numeric(intercept) + residual_df$residuals # Add intercept to residuals                                                            
-  - Multiple testing correction for DE
+  - Multiple testing correction for DE (see 307_OVERHAUL_DE_PUT_TOGETHER_RESULTS_Main_VARS_ALL_BY_ALL_correction.R for example)
+      1. All the results for all the SNPs are put together at three levels CIS, Block+PCHiC and genome wide
+      2. The multiple testing is calculated for all the tests done (all variants, all genes) within each level   
+  
   - Multiple testing correction for DTU
          1. CIS consequences
              - Per variant
